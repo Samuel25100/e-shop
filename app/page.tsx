@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import TopBar from "./components/topbar";
 import "./home.css";
 
 // Sample product data
@@ -111,143 +112,44 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cartCount, setCartCount] = useState(0);
-  const [showFilters, setShowFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
 
-  const categories = ["All", "Electronics", "Fashion", "Home", "Sports", "Accessories"];
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesPrice = product.price >= priceRange.min && product.price <= priceRange.max;
+    return matchesSearch && matchesCategory && matchesPrice;
   });
 
   const handleAddToCart = (productId: number) => {
     setCartCount(cartCount + 1);
     // In real app, this would add to cart in backend
   };
+  
 
   return (
     <div className="page-container">
-      {/* Top Navigation Bar - Fixed */}
-      <header className="top-bar">
-        <div className="top-bar-content">
-          {/* Logo */}
-          <Link href="/" className="logo">
-            <span className="logo-text">eCom</span>
-          </Link>
-
-          {/* Delivery Location */}
-          <div className="delivery-location">
-            <div className="location-label">Deliver to</div>
-            <div className="location-text">
-              <svg className="location-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              New York, 10001
-            </div>
-          </div>
-
-          {/* Categories Dropdown */}
-          <div className="categories-dropdown">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="category-select"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Search Bar */}
-          <div className="search-container">
-            <button
-              className="filter-button"
-              onClick={() => setShowFilters(!showFilters)}
-              title="Filters"
-            >
-              <svg className="filter-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-            </button>
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            <button className="search-button">
-              <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Cart */}
-          <Link href="/cart" className="cart-link">
-            <svg className="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span className="cart-label">Cart</span>
-            <span className="cart-count">{cartCount}</span>
-          </Link>
-
-          {/* User Account */}
-          <div className="user-account">
-            {session?.user ? (
-              <Link href="/account" className="user-link">
-                <div className="user-greeting">Hello, {session.user.name?.split(' ')[0]}</div>
-                <div className="user-account-text">Account</div>
-              </Link>
-            ) : (
-              <Link href="/api/auth/login" className="user-link">
-                <div className="user-greeting">Hello, Sign in</div>
-                <div className="user-account-text">Account & Lists</div>
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Filter Panel (Optional) */}
-      {showFilters && (
-        <div className="filter-panel">
-          <h3>Filters</h3>
-          <div className="filter-options">
-            <label>
-              <input type="checkbox" /> Price: Under $50
-            </label>
-            <label>
-              <input type="checkbox" /> Price: $50 - $100
-            </label>
-            <label>
-              <input type="checkbox" /> Price: Over $100
-            </label>
-            <label>
-              <input type="checkbox" /> Rating: 4★ & above
-            </label>
-          </div>
-        </div>
-      )}
-
+      <div className="page-container">
+      <TopBar cartCount={cartCount} setPriceRange={setPriceRange} 
+              selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} 
+              searchQuery={searchQuery} setSearchQuery={setSearchQuery} 
+      />
       {/* Products Grid */}
       <main className="products-container">
         <div className="products-grid">
           {filteredProducts.map((product) => (
             <div key={product.id} className="product-card">
-              <div className="product-image-wrapper">
+              <Link href={`/products/1`} className="product-link">
+                <div className="product-image-wrapper">
                 <img
                   src={product.image}
                   alt={product.name}
                   className="product-image"
                 />
                 <span className="product-category">{product.category}</span>
-              </div>
+                </div>
+              </Link>
               <div className="product-info">
                 <h3 className="product-name">{product.name}</h3>
                 <div className="product-rating">
@@ -265,10 +167,12 @@ export default function HomePage() {
                   Add to Cart
                 </button>
               </div>
+              
             </div>
           ))}
         </div>
       </main>
+      </div>
     </div>
   );
 }
