@@ -1,6 +1,3 @@
-// ============================================
-// File: /lib/auth.ts - Auth helper functions
-// ============================================
 import { auth } from "@/auth/authOptions";
 import { NextRequest } from "next/server";
 
