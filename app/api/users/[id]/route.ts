@@ -12,7 +12,7 @@ export async function GET(
     await requireAdmin();
     await connectDB();
 
-    const user = await User.findById(params.id)
+    const user: any = await User.findById(params.id)
       .select("-password")
       .populate("wishlist")
       .populate("cartId");
