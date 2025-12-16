@@ -6,13 +6,14 @@ import { requireAdmin } from "@/lib/auth";
 // GET /api/users/:id - Admin: Get user details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
     await connectDB();
 
-    const user: any = await User.findById(params.id)
+    const paramsResolved = await params;
+    const user: any = await User.findById(paramsResolved.id)
       .select("-password")
       .populate("wishlist")
       .populate("cartId");
