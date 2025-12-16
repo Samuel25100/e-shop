@@ -32,7 +32,13 @@ const OrderSchema = new mongoose.Schema<Order>({
       total:      { type: Number },
     }
   ],
-  shippingAddress: { type: ObjectId, ref: "Address" },
+  shippingAddress: {
+    line1:        { type: String, required: true },
+    line2:        { type: String },
+    city:         { type: String, required: true },
+    country:      { type: String, required: true },
+    postalCode:   { type: String },
+  },
   paymentId:       { type: ObjectId, ref: "Payment" },
   totalAmount:     { type: Number, required: true },
   currency:        { type: String, default: "USD" },

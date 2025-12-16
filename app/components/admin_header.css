@@ -17,6 +17,11 @@
   color: #111827;
 }
 
+.main-title {
+  margin-left: 20rem;
+}
+
+
 .header-actions {
   display: flex;
   align-items: center;

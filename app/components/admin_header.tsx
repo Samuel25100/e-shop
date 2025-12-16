@@ -3,7 +3,7 @@ import "./admin_header.css";
 export default function AdminHeader() {
     return (
         <header className="content-header">
-          <h1 className="page-title">Ecom Admin Dashboard</h1>
+          <h1 className="page-title main-title">Ecom Admin Dashboard</h1>
           <div className="header-actions">
             <button className="btn-secondary">
               <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
