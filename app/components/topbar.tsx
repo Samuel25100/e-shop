@@ -135,6 +135,14 @@ export default function TopBar({
               </Link>
             )}
           </div>
+          <div className="user-account">
+            {/* session?.user?.role */ "admin" === "admin" && (
+              <Link href="/admin" className="user-link">
+                <div className="admin-greeting">Hello, Go to</div>
+                <div className="admin-text">Admin Panel</div>
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

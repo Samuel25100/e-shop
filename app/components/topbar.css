@@ -415,6 +415,16 @@
   font-size: 0.875rem;
   font-weight: 600;
 }
+.admin-greeting {
+  font-size: 0.76rem;
+  color: #ccc;
+}
+
+.admin-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fbbf24;
+}
 
 /* Filter Panel */
 .filter-panel {
