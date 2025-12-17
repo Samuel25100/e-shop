@@ -12,8 +12,8 @@ export async function GET(
     await requireAdmin();
     await connectDB();
 
-    const paramsResolved = await params;
-    const user: any = await User.findById(paramsResolved.id)
+    const { id } = await params;
+    const user: any = await User.findById(id)
       .select("-password")
       .populate("wishlist")
       .populate("cartId");
@@ -42,13 +42,14 @@ export async function GET(
 // DELETE /api/users/:id - Admin: Delete user
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
     await connectDB();
 
-    const user = await User.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const user = await User.findByIdAndDelete(id);
 
     if (!user) {
       return NextResponse.json(
