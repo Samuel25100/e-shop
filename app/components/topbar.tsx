@@ -1,11 +1,9 @@
 "use client";
 
-
 import { useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import "./topbar.css";
-
 
 export default function TopBar({
   cartCount,
@@ -24,10 +22,10 @@ export default function TopBar({
 }) {
   const { data: session } = useSession();
   const [showFilters, setShowFilters] = useState(false);
+  const [showUserPopup, setShowUserPopup] = useState(false);
   const [tempPriceRange, setTempPriceRange] = useState({ min: 0, max: 20000 });
 
   const categories = ["All", "Electronics", "Fashion", "Home", "Sports", "Accessories"];
-
 
   const handleApplyPrice = () => {
     setPriceRange(tempPriceRange);
@@ -48,7 +46,13 @@ export default function TopBar({
     const percent = (value / 250000) * 100;
     e.target.style.setProperty("--value", `${percent}%`);
   };
-  
+
+  const handleLogout = () => {
+    // Logout logic will be handled later
+    signOut();
+    console.log("Logout clicked");
+    setShowUserPopup(false);
+  };
 
   return (
     <>
@@ -124,25 +128,47 @@ export default function TopBar({
           {/* User Account */}
           <div className="user-account">
             {session?.user ? (
-              <Link href="/account" className="user-link">
+              <div 
+                className="user-link-wrapper"
+                onClick={() => setShowUserPopup(!showUserPopup)}
+              >
                 <div className="user-greeting">Hello, {session.user.name?.split(' ')[0]}</div>
                 <div className="user-account-text">Account</div>
-              </Link>
+              </div>
             ) : (
               <Link href="/api/auth/login" className="user-link">
                 <div className="user-greeting">Hello, Sign in</div>
                 <div className="user-account-text">Account & Lists</div>
               </Link>
             )}
+
+            {/* User Popup */}
+            {showUserPopup && session?.user && (
+              <div className="user-popup">
+                <div className="user-popup-header">
+                  <div className="user-avatar">
+                    {session.user.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="user-full-name">{session.user.name}</div>
+                </div>
+                <button className="logout-btn" onClick={handleLogout}>
+                  <svg className="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
-          <div className="user-account">
-            {/* session?.user?.role */ "admin" === "admin" && (
+
+          {session?.user?.role === "admin" && (
+            <div className="user-account">
               <Link href="/admin" className="user-link">
                 <div className="admin-greeting">Hello, Go to</div>
                 <div className="admin-text">Admin Panel</div>
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </header>
 

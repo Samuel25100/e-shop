@@ -1,68 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import TopBar from "@/app/components/topbar";
 import "./product.css";
 
 // Sample product data matching your schema
-const productData = {
-  _id: "1",
-  name: "Wireless Bluetooth Headphones",
-  slug: "wireless-bluetooth-headphones",
-  description: "Experience premium sound quality with these wireless Bluetooth headphones. Featuring advanced noise cancellation technology, comfortable over-ear design, and up to 30 hours of battery life. Perfect for music lovers, commuters, and anyone who appreciates high-quality audio. The ergonomic design ensures comfort during extended listening sessions.",
-  price: 120000,
-  discount: 25, // 25% off
-  finalPrice: 90000,
-  currency: "UGX",
-  categoryId: "electronics-123",
-  brand: "AudioTech",
-  images: [
-    {
-      url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop",
-      alt: "Wireless Headphones - Front View"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&h=800&fit=crop",
-      alt: "Wireless Headphones - Side View"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1545127398-14699f92334b?w=800&h=800&fit=crop",
-      alt: "Wireless Headphones - Detail View"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=800&h=800&fit=crop",
-      alt: "Wireless Headphones - In Use"
-    }
-  ],
-  stock: 45,
-  isActive: true,
-  ratingAvg: 4.5,
-  ratingCount: 128,
-  createdAt: new Date("2024-01-15"),
-  updatedAt: new Date("2024-12-10"),
-  features: [
-    "Advanced Active Noise Cancellation (ANC)",
-    "30-hour battery life with quick charge",
-    "Premium 40mm drivers for rich sound",
-    "Comfortable memory foam ear cushions",
-    "Bluetooth 5.0 connectivity",
-    "Built-in microphone for calls",
-    "Foldable design with carrying case",
-    "Multi-device pairing support"
-  ],
-  specifications: {
-    "Brand": "AudioTech",
-    "Model": "AT-X500",
-    "Color": "Black",
-    "Weight": "250g",
-    "Connectivity": "Bluetooth 5.0, 3.5mm jack",
-    "Battery": "1000mAh Li-ion",
-    "Driver Size": "40mm",
-    "Impedance": "32 Ohm"
-  }
-};
+interface Images {
+  "_id": string,
+  "url": string | undefined,
+  "alt": string | undefined
+}
+export interface Description {
+    feature:   String[],
+    details:   String,
+    specifications: { [key: string]: String },
+}
+
+export interface Product {
+    _id: string,
+    name: string,
+    slug:         string,
+    description:  Description,
+    price:        number,
+    discount:     number,
+    finalPrice:   number,
+    currency:     string,
+    categoryId:   {name: string} | null,
+    brand:        string,
+    images:       Images[],
+    stock:        number,
+    isActive:     boolean,
+    ratingAvg:    number,
+    ratingCount:  number,
+}
+
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -75,6 +49,49 @@ export default function ProductDetailPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cartCount, setCartCount] = useState(0);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
+  const [product, setProduct] = useState<Product>({
+    _id: "",
+    name: "",
+    slug:         "",
+    description:  {
+      feature: [],
+      details: "",
+      specifications: {}
+    },
+    price:        0,
+    discount:     0,
+    finalPrice:   0,
+    currency:     "",
+    categoryId:   null,
+    brand:        "",
+    images:       [
+      {
+        _id: "",
+        url: undefined,
+        alt: undefined
+      }
+    ],
+    stock:        0,
+    isActive:     false,
+    ratingAvg:    0,
+    ratingCount:  0,
+  });
+
+  
+
+  useEffect(() => {
+    // Check nextjs session
+   
+    async function fetchProductById(id: any) {
+      const res = await fetch(`/api/products/${id}`);
+      const data = await res.json();
+      console.log("Fetched one product:", data.products);
+      setProduct(data.products);
+      // Update state with fetched product data if necessary
+    }
+
+    fetchProductById(params.id);
+  }, [params.id]);
 
   const cities = ["Kampala", "Entebbe", "Jinja", "Mbarara", "Gulu"];
   const areas = {
@@ -85,12 +102,12 @@ export default function ProductDetailPage() {
     "Gulu": ["Central", "Layibi", "Pece"]
   };
 
-  const handleAddToCart = (product: number) => {
-    if (productData.stock < quantity) {
+  const handleAddToCart = (quantity: number) => {
+    if (product.stock < quantity) {
       alert("Not enough stock available");
       return;
     }
-    setCartCount(product + cartCount);
+    setCartCount(quantity + cartCount);
     // In real app, this would add to cart via API
   };
 
@@ -121,26 +138,23 @@ export default function ProductDetailPage() {
             <div className="image-gallery">
               {/* Main Image Display */}
               <div className="main-image-container">
-                <img
-                  src={productData.images[selectedImage].url}
-                  alt={productData.images[selectedImage].alt}
-                  className="product-detail-image"
-                />
-                {productData.discount > 0 && (
+                <img src={product.images[selectedImage].url} alt={product.images[selectedImage].alt}
+                  className="product-detail-image" />
+                {product.discount > 0 && (
                   <div className="discount-badge">
-                    -{productData.discount}%
+                    -{product.discount}%
                   </div>
                 )}
-                {productData.stock < 10 && productData.stock > 0 && (
+                {product.stock < 10 && product.stock > 0 && (
                   <div className="stock-badge">
-                    Only {productData.stock} left!
+                    Only {product.stock} left!
                   </div>
                 )}
               </div>
 
               {/* Thumbnail Images */}
               <div className="thumbnail-container">
-                {productData.images.map((image, index) => (
+                {product.images.map((image, index) => (
                   <button
                     key={index}
                     className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
@@ -155,38 +169,38 @@ export default function ProductDetailPage() {
 
           {/* Product Info */}
           <div className="product-info-section">
-            <div className="brand-name">{productData.brand}</div>
-            <h1 className="product-title">{productData.name}</h1>
+            <div className="brand-name">{product.brand}</div>
+            <h1 className="product-title">{product.name}</h1>
             
             {/* Rating */}
             <div className="product-rating-section">
               <div className="rating-stars">
-                {"★".repeat(Math.floor(productData.ratingAvg))}
-                {"☆".repeat(5 - Math.floor(productData.ratingAvg))}
+                {"★".repeat(Math.floor(product.ratingAvg))}
+                {"☆".repeat(5 - Math.floor(product.ratingAvg))}
               </div>
-              <span className="rating-text">{productData.ratingAvg} out of 5</span>
-              <span className="review-count">({productData.ratingCount} reviews)</span>
+              <span className="rating-text">{product.ratingAvg} out of 5</span>
+              <span className="review-count">({product.ratingCount} reviews)</span>
             </div>
 
             {/* Price */}
             <div className="product-price-section">
-              <span className="price">{productData.currency} {formatPrice(productData.finalPrice)}</span>
-              {productData.discount > 0 && (
+              <span className="price">{product.currency} {formatPrice(product.finalPrice)}</span>
+              {product.discount > 0 && (
                 <>
-                  <span className="original-price">{productData.currency} {formatPrice(productData.price)}</span>
-                  <span className="discount">-{productData.discount}%</span>
+                  <span className="original-price">{product.currency} {formatPrice(product.price)}</span>
+                  <span className="discount">-{product.discount}%</span>
                 </>
               )}
             </div>
 
             {/* Stock Status */}
             <div className="stock-status">
-              {productData.stock > 0 ? (
+              {product.stock > 0 ? (
                 <span className="in-stock">
                   <svg className="stock-icon" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  In Stock ({productData.stock} available)
+                  In Stock ({product.stock} available)
                 </span>
               ) : (
                 <span className="out-of-stock">
@@ -207,9 +221,9 @@ export default function ProductDetailPage() {
                   value={quantity}
                   onChange={(e) => setQuantity(parseInt(e.target.value))}
                   className="quantity-select"
-                  disabled={productData.stock === 0}
+                  disabled={product.stock === 0}
                 >
-                  {Array.from({ length: Math.min(10, productData.stock) }, (_, i) => i + 1).map((num) => (
+                  {Array.from({ length: Math.min(10, product.stock) }, (_, i) => i + 1).map((num) => (
                     <option key={num} value={num}>
                       {num}
                     </option>
@@ -219,12 +233,12 @@ export default function ProductDetailPage() {
               <button 
                 className="add-to-cart-btn" 
                 onClick={() => handleAddToCart(quantity)}
-                disabled={productData.stock === 0 || !productData.isActive}
+                disabled={product.stock === 0 || !product.isActive}
               >
                 <svg className="cart-icon-btn" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                {productData.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
               </button>
             </div>
           </div>
@@ -238,11 +252,11 @@ export default function ProductDetailPage() {
 
             <div className="details-content">
               <h2 className="details-heading">Product Description</h2>
-              <p className="description-text">{productData.description}</p>
+              <p className="description-text">{product.description.details}</p>
 
               <h3 className="features-heading">Key Features</h3>
               <ul className="features-list">
-                {productData.features.map((feature, index) => (
+                {product.description.feature.map((feature, index) => (
                   <li key={index}>{feature}</li>
                 ))}
               </ul>
@@ -250,7 +264,7 @@ export default function ProductDetailPage() {
               <h3 className="specs-heading">Specifications</h3>
               <table className="specs-table">
                 <tbody>
-                  {Object.entries(productData.specifications).map(([key, value]) => (
+                  {Object.entries(product.description.specifications).map(([key, value]) => (
                     <tr key={key}>
                       <td className="spec-label">{key}</td>
                       <td className="spec-value">{value}</td>

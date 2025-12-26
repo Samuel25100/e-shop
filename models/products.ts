@@ -1,21 +1,33 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { ObjectId } from "mongodb";
 
+export interface Description {
+    feature:   String[],
+    details:   String,
+    specifications: { [key: string]: String },
+}
+
+interface Images {
+  "_id": string,
+  "url": string,
+  "alt": string
+}
+
 export interface Product extends Document {
     name: String,
     slug:         String,
-    description:  String,
-    price:        Number,
-    discount:     Number,
-    finalPrice:   Number,
+    description:  Description,
+    price:        number,
+    discount:     number,
+    finalPrice:   number,
     currency:     String,
     categoryId:   ObjectId | null,
     brand:        String,
-    images:       [{ url: String, alt: String }],
-    stock:        Number,
+    images:       Images[],
+    stock:        number,
     isActive:     Boolean,
-    ratingAvg:    Number,
-    ratingCount:  Number,
+    ratingAvg:    number,
+    ratingCount:  number,
     createdAt:    Date,
     updatedAt:    Date,
 }
@@ -23,7 +35,15 @@ export interface Product extends Document {
 const ProductSchema = new Schema<Product>({
     name:         { type: String, required: true, index: true },
     slug:         { type: String, unique: true },
-    description:  { type: String },
+    description:  { 
+        feature: [{ type: String }],
+        details: { type: String },
+        specifications: { 
+            type: Map,
+            of: String,
+            default: {},
+        } // list of specifications
+    },
     price:        { type: Number, required: true },
     discount:     { type: Number, default: 0 }, // percent
     finalPrice:   { type: Number, required: true }, // price - discount
@@ -39,4 +59,5 @@ const ProductSchema = new Schema<Product>({
     updatedAt:    { type: Date, default: Date.now },
 });
 
-export const Products = mongoose.model<Product>("Products", ProductSchema);
+const Products = mongoose.models.Products || mongoose.model("Products", ProductSchema);
+export default Products;
