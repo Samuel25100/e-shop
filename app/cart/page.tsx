@@ -1,11 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TopBar from "@/app/components/topbar";
 import "./cart.css";
 
+interface CartItem {
+  _id: string;
+  productId: {
+    _id: string;
+    name: string;
+    slug: string;
+    brand: string;
+    images: { url: string; alt: string }[];
+    stock: number;
+    currency: string;
+    isActive: boolean;
+  };
+  quantity: number;
+  price: number;
+  total: number;
+}
+
+interface CartData {
+  userId: string;
+  items: CartItem[];
+  totalItems: number;
+  totalPrice: number;
+  updatedAt: Date;
+}
 // Sample cart data matching your schema
 const initialCartData = {
   userId: "user123",
@@ -24,6 +48,7 @@ const initialCartData = {
           }
         ],
         stock: 45,
+        currency: "UGX",
         isActive: true
       },
       quantity: 2,
@@ -44,7 +69,8 @@ const initialCartData = {
           }
         ],
         stock: 20,
-        isActive: true
+        isActive: true,
+        currency: "UGX"
       },
       quantity: 1,
       price: 199000,
@@ -64,7 +90,8 @@ const initialCartData = {
           }
         ],
         stock: 15,
-        isActive: true
+        isActive: true,
+        currency: "UGX"
       },
       quantity: 1,
       price: 129000,
@@ -73,16 +100,39 @@ const initialCartData = {
   ],
   totalItems: 4,
   totalPrice: 508000,
-  currency: "UGX",
   updatedAt: new Date()
 };
 
 export default function CartPage() {
   const router = useRouter();
-  const [cartData, setCartData] = useState(initialCartData);
+  const [cartData, setCartData] = useState(initialCartData as CartData);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
+
+  useEffect(() => {
+    // Fetch cart data from API when component mounts
+    const fetchCartData = async () => {
+      try {
+        const response = await fetch("/api/cart", { cache: "no-store" });
+        const data = await response.json();
+        if (data.success && data.cart) {
+          setCartData(data.cart);
+        } else {
+          setCartData({
+            ...cartData,
+            items: [],
+            totalItems: 0,
+            totalPrice: 0
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching cart data:", error);
+      }
+    };
+
+    fetchCartData();
+  }, []);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-UG').format(price);
@@ -148,6 +198,29 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     // In real app, navigate to checkout page
+    async function UpdateCart() {
+      try {
+      const response = await fetch("/api/cart/update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          itemUpdates: cartData.items.map(item => ({
+            productId: item.productId._id,
+            price: item.price,
+            total: item.total,
+            quantity: item.quantity
+          })),
+          totalItems: cartData.totalItems,
+          totalPrice: cartData.totalPrice
+        })
+      });
+      } catch (error) {
+        console.error("Error updating cart:", error);
+      }
+    }
+    UpdateCart();
     router.push("/checkout");
   };
 
@@ -254,7 +327,7 @@ export default function CartPage() {
                       <div className="item-price">
                         <p className="price-label">Price:</p>
                         <p className="price-value">
-                          {cartData.currency} {formatPrice(item.price)}
+                          {item.productId.currency} {formatPrice(item.price)}
                         </p>
                       </div>
 
@@ -262,7 +335,7 @@ export default function CartPage() {
                       <div className="item-total">
                         <p className="total-label">Total:</p>
                         <p className="total-value">
-                          {cartData.currency} {formatPrice(item.total)}
+                          {item.productId.currency} {formatPrice(item.total)}
                         </p>
                       </div>
 
@@ -297,21 +370,21 @@ export default function CartPage() {
                     <div className="summary-row">
                       <span className="summary-label">Items ({cartData.totalItems}):</span>
                       <span className="summary-value">
-                        {cartData.currency} {formatPrice(cartData.totalPrice)}
+                        {cartData.items.length > 0 ? cartData.items[0].productId.currency : "UGX"} {formatPrice(cartData.totalPrice)}
                       </span>
                     </div>
 
                     <div className="summary-row">
                       <span className="summary-label">Shipping:</span>
                       <span className="summary-value">
-                        {cartData.currency} {formatPrice(5000)}
+                        {cartData.items.length > 0 ? cartData.items[0].productId.currency : "UGX"} {formatPrice(5000)}
                       </span>
                     </div>
 
                     <div className="summary-row">
                       <span className="summary-label">Tax (18%):</span>
                       <span className="summary-value">
-                        {cartData.currency} {formatPrice(cartData.totalPrice * 0.18)}
+                        {cartData.items.length > 0 ? cartData.items[0].productId.currency : "UGX"} {formatPrice(cartData.totalPrice * 0.18)}
                       </span>
                     </div>
 
@@ -320,7 +393,7 @@ export default function CartPage() {
                     <div className="summary-row summary-total">
                       <span className="summary-label">Order Total:</span>
                       <span className="summary-value">
-                        {cartData.currency} {formatPrice(cartData.totalPrice + 5000 + (cartData.totalPrice * 0.18))}
+                        {cartData.items.length > 0 ? cartData.items[0].productId.currency : "UGX"} {formatPrice(cartData.totalPrice + 5000 + (cartData.totalPrice * 0.18))}
                       </span>
                     </div>
                   </div>

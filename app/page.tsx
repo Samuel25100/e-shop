@@ -147,8 +147,17 @@ export default function HomePage() {
       setProducts(proJson.products);
     }
 
+    async function Cartcount(){
+      const response = await fetch("/api/cart/num");
+      const data = await response.json();
+      if (data.success) {
+        setCartCount(data.itemCount);
+      }      
+    }
+
+    Cartcount();
     fetchProducts();
-  }, []); 
+  }, [cartProducts, session]);
 
 
   const filteredProducts : Product[] = products.filter((product) => {
@@ -158,10 +167,36 @@ export default function HomePage() {
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
-  const handleAddToCart = (productId: string) => {
-    setCartProducts([...cartProducts, productId]);
-    setCartCount(cartCount + 1);
-    // In real app, this would add to cart in backend
+  const handleAddToCart = (product: Product) => {
+    setCartProducts([...cartProducts, product._id]);
+    localStorage.setItem("cartProducts", JSON.stringify([...cartProducts, product._id]));
+    async function addToCart() {
+      if (!session) {
+        alert("Please log in to add items to your cart.");
+        return;
+      }
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "item": {
+              "productId": product._id,
+              "quantity": 1,
+              "price": product.price,
+              "total": product.price * 1
+            },
+          "totalItems": 1,
+          "totalPrice": product.price
+        }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        alert("Failed to add item to cart: " + data.message);
+      }
+    }
+    addToCart();
   };
   
 
@@ -199,7 +234,7 @@ export default function HomePage() {
                 <div className="product-price">${product.price}</div>
                 <button
                   className="add-to-cart-btn"
-                  onClick={() => handleAddToCart(product._id)}
+                  onClick={() => handleAddToCart(product)}
                 >
                   Add to Cart
                 </button>

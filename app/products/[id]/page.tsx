@@ -84,9 +84,12 @@ export default function ProductDetailPage() {
    
     async function fetchProductById(id: any) {
       const res = await fetch(`/api/products/${id}`);
+      const cartNum = await fetch('/api/cart/num');
       const data = await res.json();
       console.log("Fetched one product:", data.products);
       setProduct(data.products);
+      const cartData = await cartNum.json();
+      setCartCount(cartData.itemCount || 0);
       // Update state with fetched product data if necessary
     }
 
@@ -107,8 +110,51 @@ export default function ProductDetailPage() {
       alert("Not enough stock available");
       return;
     }
-    setCartCount(quantity + cartCount);
-    // In real app, this would add to cart via API
+    async function addToCart() {
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          item: {
+            productId: product._id,
+            quantity,
+            price: product.finalPrice,
+          },
+          totalItems: quantity,
+          totalPrice: product.finalPrice * quantity,
+        }),
+      });
+      const data = await res.json();
+      console.log("Add to cart response:", data);
+      if (data.success) {
+        alert("Item added to cart");
+      } else if (data.status === 201 && data.product && data.product.quantity < quantity) {
+        const res = await fetch('/api/cart/update', { 
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            itemUpdates: {
+              productId: product._id,
+              quantity
+            }, totalItems: data.totalItems + quantity, totalPrice: data.totalPrice + product.finalPrice * quantity 
+          }),   
+        });
+        const updateData = await res.json();
+        if (updateData.success) {
+          alert("Cart updated with new quantity");
+        } else {
+          alert(`Failed to update cart: ${updateData.message}`);
+        }
+
+      } else {
+        alert(`Failed to add to cart: ${data.message}`);
+      }
+    }
+    addToCart();
   };
 
   const formatPrice = (price: number) => {

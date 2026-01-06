@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import "./checkout.css";
 
 // Sample cart items
-const cartItems = [
+/* const cartItems = [
   { id: 1, name: "Wireless Headphones", price: 90000, quantity: 2 },
   { id: 2, name: "Smart Watch", price: 199000, quantity: 1 }
-];
+]; */
+interface Products {
+  id: string;
+  name: string;
+}
+
+interface CartItem {
+  id: number;
+  productId: Products;
+  price: number;
+  quantity: number;
+}
 
 const regions = ["Central", "Eastern", "Northern", "Western"];
 const citiesByRegion: any = {
@@ -26,8 +37,26 @@ const paymentMethods = [
 ];
 
 export default function CheckoutPage() {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  
+
+  useEffect(() => {
+    // Fetch cart items from API
+    async function fetchCartItems() {
+      try {
+        const response = await fetch('/api/cart/checkout');
+        const data = await response.json();
+        if (data.success) {
+          setCartItems(data.items);
+        }
+      } catch (error) {
+        console.error("Error fetching cart items:", error);
+      }
+    }
+    fetchCartItems();
+  }, []);
   
   // Address Form
   const [addressForm, setAddressForm] = useState({

@@ -5,12 +5,11 @@ export interface Cart {
     userId: ObjectId | null,
     items: [
         {
-        productId:  ObjectId, quantity: Number, price: Number, total: Number,
+        productId:  ObjectId, quantity: number, price: number, total: number,
         }
     ],
-    totalItems:  Number,
-    totalPrice:  Number,
-    currency:    String,
+    totalItems:  number,
+    totalPrice:  number,
     updatedAt:   Date
 }
 
@@ -18,7 +17,7 @@ const CartSchema = new mongoose.Schema<Cart>({
   userId:      { type: ObjectId, ref: "User", required: true, index: true },
   items: [
     {
-      productId:  { type: ObjectId, ref: "Product", required: true },
+      productId:  { type: ObjectId, ref: "Products", required: true },
       quantity:   { type: Number, default: 1 },
       price:      { type: Number, required: true }, // snapshot of product price
       total:      { type: Number, required: true },
@@ -26,10 +25,9 @@ const CartSchema = new mongoose.Schema<Cart>({
   ],
   totalItems:  { type: Number, default: 0 },
   totalPrice:  { type: Number, default: 0 },
-  currency:    { type: String, default: "USD" },
   updatedAt:   { type: Date, default: Date.now }
 
 });
-const Carts = mongoose.model<Cart>("Cart", CartSchema);
+const Carts = mongoose.models.Cart || mongoose.model("Cart", CartSchema);
 
 export default Carts;
